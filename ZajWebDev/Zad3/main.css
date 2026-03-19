@@ -1,0 +1,26 @@
+#container {
+	padding: 2rem;
+	border: 5px solid black;
+	border-radius: 50px;
+}
+
+#screen {
+	margin: 0.5rem;
+	padding: 1rem;
+	border: 2px solid black;
+	border-radius: 25px;
+	font-size: 2rem;
+	text-align: right;
+}
+
+#keyboard {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+	margin: 0.5rem;
+	padding: 1rem;
+}
+
+.btn{
+    font-size: 3rem;
+
+}
