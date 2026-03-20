@@ -22,7 +22,6 @@ function writeOnScreen(c) {
 	let numbers = screen.textContent.split(/[+\-*/]/);
 	let lastNumber = numbers[numbers.length - 1];
 	let lastChar = screen.textContent.substr(screen.textContent.length - 1);
-	console.log(lastChar);
 
 	if (c === '.' && lastNumber.includes('.')) {
 		return;
@@ -66,18 +65,44 @@ function clearScreenDigit() {
 	}
 }
 
+// Obliczanie dzialania
 function calcResult() {
 	let screen = document.getElementById('screen');
+
 	try {
 		let result = new Function('return ' + screen.textContent)();
 		if (Number.isNaN(result)) {
 			screen.textContent = 'Error';
 		} else {
+			let currentExpression = screen.textContent;
 			screen.textContent = result;
+			addToHistory(currentExpression, result);
 		}
 	} catch (error) {
+		let lastChar = screen.textContent.substr(screen.textContent.length - 1);
+		if (['/', '*', '-', '+'].includes(lastChar)) {
+			return;
+		}
 		screen.textContent = 'Error';
 	}
+}
+
+// Dodawanie dzialania do historii
+function addToHistory(expression, result) {
+    let historyList = document.getElementById('history-list');
+
+    let li = document.createElement('li');
+    li.textContent = `${expression} = ${result}`;
+
+    li.addEventListener('click', () => {
+        document.getElementById('screen').textContent = expression;
+    });
+
+    historyList.prepend(li);
+
+    if (historyList.children.length > 10) {
+        historyList.removeChild(historyList.lastChild);
+    }
 }
 
 // Inicjalizacja
@@ -167,18 +192,27 @@ function init() {
 			['/', '*', '-', '+', '.'].includes(key)
 		) {
 			writeOnScreen(key);
-		}
-		else if (key === '=' || key === 'Enter') {
+		} else if (key === '=' || key === 'Enter') {
 			event.preventDefault();
 			calcResult();
-		}
-
-		else if (key === 'Backspace') {
+		} else if (key === 'Backspace') {
 			clearScreenDigit();
 		} else if (key === 'Escape') {
 			clearScreenFull();
 		}
 	});
+
+
+	// Historia obliczen
+    let historyContainer = document.getElementById('history')
+    
+    let historyTitle = document.createElement('h3');
+    historyTitle.textContent = 'Historia operacji';
+    historyContainer.appendChild(historyTitle);
+
+    let historyList = document.createElement('ul');
+    historyList.setAttribute('id', 'history-list');
+    historyContainer.appendChild(historyList);
 }
 
 init();
