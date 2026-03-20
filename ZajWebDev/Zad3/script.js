@@ -1,37 +1,64 @@
 console.log('Witam w moim kalkulatorze');
 
-let firstNumber = 0,
-	secondNumber = 0,
-	operation = '';
+// Sprawdzanie czy na ekranie jest blad
+function isErrorOnScreen() {
+	let screen = document.getElementById('screen');
+
+	return (
+		screen.textContent === 'Error' ||
+		screen.textContent === 'Infinity' ||
+		screen.textContent === '-Infinity' ||
+		screen.textContent === 'INFINITY'
+	);
+}
 
 function writeOnScreen(c) {
 	let screen = document.getElementById('screen');
-	if (c === '.' && screen.textContent.includes('.')) {
-		return;
+
+	if (isErrorOnScreen()) {
+		screen.textContent = '0';
 	}
-	if (screen.textContent === '0') {
-		screen.textContent = c;
+
+	let numbers = screen.textContent.split(/[+\-*/]/);
+	let lastNumber = numbers[numbers.length - 1];
+	let lastChar = screen.textContent.substr(screen.textContent.length - 1);
+	console.log(lastChar);
+
+	if (c === '.' && lastNumber.includes('.')) {
+		return;
+	} else if (
+		['/', '*', '-', '+'].includes(c) &&
+		['/', '*', '-', '+'].includes(lastChar)
+	) {
+		screen.textContent = screen.textContent.slice(0, -1) + c;
+	} else if (lastNumber === '0' && !['/', '*', '-', '+', '.'].includes(c)) {
+		screen.textContent = screen.textContent.slice(0, -1) + c;
+	} else if (screen.textContent === '0') {
+		if (['/', '*', '-', '+', '.'].includes(c)) {
+			screen.textContent += c;
+		} else {
+			screen.textContent = c;
+		}
 	} else {
 		screen.textContent += c;
 	}
 }
 
-function addOperation(c) {
-    if(operation === ''){
-        let screen = document.getElementById('screen');
-        firstNumber = screen.textContent
-
-    }
-    else(operation = c)
-}
-
+// Czyszczenie calego wyrazenia
 function clearScreenFull() {
 	let screen = document.getElementById('screen');
 	screen.textContent = '0';
 }
 
+// Czyszczenie jednego znaku
 function clearScreenDigit() {
 	let screen = document.getElementById('screen');
+
+	if (isErrorOnScreen()) {
+		clearScreenFull();
+		return;
+	}
+
 	if (screen.textContent.length > 1) {
 		screen.textContent = screen.textContent.slice(0, -1);
 	} else {
@@ -39,6 +66,21 @@ function clearScreenDigit() {
 	}
 }
 
+function calcResult() {
+	let screen = document.getElementById('screen');
+	try {
+		let result = new Function('return ' + screen.textContent)();
+		if (Number.isNaN(result)) {
+			screen.textContent = 'Error';
+		} else {
+			screen.textContent = result;
+		}
+	} catch (error) {
+		screen.textContent = 'Error';
+	}
+}
+
+// Inicjalizacja
 function init() {
 	let container = document.getElementById('container');
 
@@ -73,6 +115,7 @@ function init() {
 		'+',
 	];
 
+	// Dodawanie przyciskow do funkcji
 	buttons.forEach(button => {
 		if (button === '') {
 			const placeholder = document.createElement('div');
@@ -80,8 +123,10 @@ function init() {
 			keyboard.appendChild(placeholder);
 			return;
 		}
+
 		const btn = document.createElement('button');
 		btn.textContent = button;
+		btn.setAttribute('value', button);
 
 		if (button === 'C') {
 			btn.classList.add('btn', 'action-btn');
@@ -93,12 +138,18 @@ function init() {
 			btn.addEventListener('click', e => {
 				clearScreenFull();
 			});
-		} else if (['/', '*', '-', '+', '='].includes(button)) {
+		} else if (['/', '*', '-', '+'].includes(button)) {
 			btn.classList.add('btn', 'operator-btn');
+			btn.addEventListener('click', e => {
+				writeOnScreen(btn.getAttribute('value'));
+			});
+		} else if (button === '=') {
+			btn.classList.add('btn', 'equal-btn');
+			btn.addEventListener('click', calcResult);
 		} else {
 			btn.classList.add('btn', 'num-btn');
 			btn.addEventListener('click', e => {
-				writeOnScreen(btn.textContent);
+				writeOnScreen(btn.getAttribute('value'));
 			});
 		}
 
@@ -106,6 +157,28 @@ function init() {
 	});
 
 	container.appendChild(keyboard);
+
+	// Obsluga klawiatury
+	document.addEventListener('keydown', event => {
+		const key = event.key;
+
+		if (
+			(key >= '0' && key <= '9') ||
+			['/', '*', '-', '+', '.'].includes(key)
+		) {
+			writeOnScreen(key);
+		}
+		else if (key === '=' || key === 'Enter') {
+			event.preventDefault();
+			calcResult();
+		}
+
+		else if (key === 'Backspace') {
+			clearScreenDigit();
+		} else if (key === 'Escape') {
+			clearScreenFull();
+		}
+	});
 }
 
 init();
